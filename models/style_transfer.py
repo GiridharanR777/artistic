@@ -9,6 +9,7 @@ import torch.nn as nn
 from models.encoder import VGGEncoder
 from models.decoder import Decoder
 from models.adain import AdaIN
+from models.pretrained import load_pretrained_decoder
 from data.preprocessing import rgb_to_ycbcr, ycbcr_to_rgb
 
 
@@ -23,7 +24,7 @@ class StyleTransferModel(nn.Module):
         self.device = device
         self.encoder = VGGEncoder(device=device)
         self.adain = AdaIN()
-        self.decoder = Decoder().to(device)
+        self.decoder = load_pretrained_decoder(device=device)
 
     def forward(
         self,

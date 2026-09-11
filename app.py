@@ -167,50 +167,18 @@ def main():
                 to_tensor = transforms.ToTensor()
                 device = torch.device("cpu")
 
-                content_id = (id(content_img), res_choice, color_preserve)
-                style_id = (id(style_img), res_choice, color_preserve)
+                c_resized = content_img.resize((res_choice, res_choice))
+                s_resized = style_img.resize((res_choice, res_choice))
+                c_t = to_tensor(c_resized).unsqueeze(0).to(device)
+                s_t = to_tensor(s_resized).unsqueeze(0).to(device)
 
                 with torch.inference_mode():
                     if color_preserve:
-                        # Luminance style transfer
-                        c_resized = content_img.resize((res_choice, res_choice))
-                        s_resized = style_img.resize((res_choice, res_choice))
-                        c_t = to_tensor(c_resized).unsqueeze(0).to(device)
-                        s_t = to_tensor(s_resized).unsqueeze(0).to(device)
-
-                        c_ycbcr = rgb_to_ycbcr(c_t)
-                        s_ycbcr = rgb_to_ycbcr(s_t)
-                        c_y = c_ycbcr[:, 0:1, :, :].repeat(1, 3, 1, 1)
-                        s_y = s_ycbcr[:, 0:1, :, :].repeat(1, 3, 1, 1)
-
-                        fc = model.encoder.encode(c_y)
-                        fs = model.encoder.encode(s_y)
-                        t_feat = strength * adaptive_instance_normalization(fc, fs) + (1.0 - strength) * fc
-                        styled_y_rgb = model.decoder(t_feat)
-                        styled_ycbcr = rgb_to_ycbcr(styled_y_rgb)
-                        merged = torch.cat([styled_ycbcr[:, 0:1, :, :], c_ycbcr[:, 1:2, :, :], c_ycbcr[:, 2:3, :, :]], dim=1)
-                        out_tensor = ycbcr_to_rgb(merged)
+                        out_tensor = model.stylize_color_preserving(c_t, s_t, alpha=strength)
                     else:
-                        # Standard RGB transfer with feature reuse
-                        if (st.session_state.cached_content_id != content_id or
-                            st.session_state.cached_style_id != style_id or
-                            st.session_state.fc is None):
-                            c_resized = content_img.resize((res_choice, res_choice))
-                            s_resized = style_img.resize((res_choice, res_choice))
-                            c_t = to_tensor(c_resized).unsqueeze(0).to(device)
-                            s_t = to_tensor(s_resized).unsqueeze(0).to(device)
+                        out_tensor = model(c_t, s_t, alpha=strength)
 
-                            st.session_state.fc = model.encoder.encode(c_t)
-                            st.session_state.fs = model.encoder.encode(s_t)
-                            st.session_state.cached_content_id = content_id
-                            st.session_state.cached_style_id = style_id
-
-                        fc = st.session_state.fc
-                        fs = st.session_state.fs
-                        t_feat = strength * adaptive_instance_normalization(fc, fs) + (1.0 - strength) * fc
-                        out_tensor = model.decoder(t_feat)
-
-                    result_img = tensor_to_image(out_tensor)
+                result_img = tensor_to_image(out_tensor)
 
             t_elapsed = round(time.time() - t_start, 2)
             st.session_state.last_result = result_img

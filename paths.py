@@ -45,13 +45,16 @@ def ensure_weights_exist():
     """
     os.makedirs(CHECKPOINTS_DIR, exist_ok=True)
 
-    if not os.path.exists(DECODER_WEIGHTS_PATH) or os.path.getsize(DECODER_WEIGHTS_PATH) == 0:
+    # decoder.pth is ~14 MB
+    if not os.path.exists(DECODER_WEIGHTS_PATH) or os.path.getsize(DECODER_WEIGHTS_PATH) < 10_000_000:
         print("[Setup] Downloading pre-trained decoder.pth (14 MB)...")
         _download_file(DECODER_WEIGHTS_URL, DECODER_WEIGHTS_PATH)
-        print("[Setup] decoder.pth downloaded.")
+        print(f"[Setup] decoder.pth downloaded ({os.path.getsize(DECODER_WEIGHTS_PATH)} bytes).")
 
-    if not os.path.exists(VGG_WEIGHTS_PATH) or os.path.getsize(VGG_WEIGHTS_PATH) == 0:
+    # vgg_normalised.pth is ~80 MB
+    if not os.path.exists(VGG_WEIGHTS_PATH) or os.path.getsize(VGG_WEIGHTS_PATH) < 70_000_000:
         print("[Setup] Downloading normalized VGG-19 encoder weights (80 MB)...")
         _download_file(VGG_WEIGHTS_URL, VGG_WEIGHTS_PATH)
-        print("[Setup] vgg_normalised.pth downloaded.")
+        print(f"[Setup] vgg_normalised.pth downloaded ({os.path.getsize(VGG_WEIGHTS_PATH)} bytes).")
+
 

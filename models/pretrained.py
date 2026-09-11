@@ -8,6 +8,7 @@ import urllib.request
 import torch
 import torch.nn as nn
 from models.decoder import Decoder
+from paths import DECODER_WEIGHTS_PATH
 
 
 def initialize_weights(model: nn.Module):
@@ -20,13 +21,18 @@ def initialize_weights(model: nn.Module):
 
 
 def load_pretrained_decoder(
-    checkpoint_path: str = "c:/art/checkpoints/decoder_latest.pth",
+    checkpoint_path: str = None,
     device: torch.device = torch.device("cpu")
 ) -> Decoder:
     """
     Loads trained decoder weights if present; otherwise initializes weights cleanly.
     """
     decoder = Decoder().to(device)
+    if checkpoint_path is None:
+        checkpoint_path = DECODER_WEIGHTS_PATH
+
+    if not os.path.exists(checkpoint_path) and os.path.exists(DECODER_WEIGHTS_PATH):
+        checkpoint_path = DECODER_WEIGHTS_PATH
 
     if os.path.exists(checkpoint_path):
         print(f"[Model] Loading decoder checkpoint from: {checkpoint_path}")

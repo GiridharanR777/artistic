@@ -19,6 +19,7 @@ import torchvision.transforms as transforms
 from models.style_transfer import StyleTransferModel
 from models.pretrained import load_pretrained_decoder
 from data.preprocessing import load_image, tensor_to_image
+from paths import DECODER_WEIGHTS_PATH, CHECKPOINTS_DIR, WIKIART_CACHE_DIR
 
 
 # Global model cache to avoid reloading weights repeatedly
@@ -39,12 +40,13 @@ def get_model(
     if checkpoint_path and os.path.exists(checkpoint_path):
         model.decoder = load_pretrained_decoder(checkpoint_path, device=device)
     else:
-        # Check standard checkpoints
+        # Check standard checkpoints using cross-platform paths
         for candidate in [
-            "c:/art/checkpoints/decoder.pth",
-            "c:/art/checkpoints/best.pth",
-            "c:/art/checkpoints/latest.pth",
-            "c:/art/checkpoints/decoder_latest.pth"
+            DECODER_WEIGHTS_PATH,
+            os.path.join(CHECKPOINTS_DIR, "decoder.pth"),
+            os.path.join(CHECKPOINTS_DIR, "best.pth"),
+            os.path.join(CHECKPOINTS_DIR, "latest.pth"),
+            os.path.join(CHECKPOINTS_DIR, "decoder_latest.pth")
         ]:
             if os.path.exists(candidate):
                 model.decoder = load_pretrained_decoder(candidate, device=device)
@@ -55,12 +57,14 @@ def get_model(
     return model
 
 
-def resolve_style_image(style: str, wikiart_cache_dir: str = "c:/art/wikiart_cache") -> str:
+def resolve_style_image(style: str, wikiart_cache_dir: str = None) -> str:
     """
     Resolves a style parameter to a valid image file path.
     If style is a file path that exists, returns it directly.
     If style is a named category (e.g. 'impressionism', 'cubism'), samples an image from the cache.
     """
+    if wikiart_cache_dir is None:
+        wikiart_cache_dir = WIKIART_CACHE_DIR
     if os.path.isfile(style):
         return style
 

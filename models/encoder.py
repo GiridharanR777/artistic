@@ -9,6 +9,9 @@ import torch
 import torch.nn as nn
 
 
+from paths import VGG_WEIGHTS_PATH
+
+
 class VGGEncoder(nn.Module):
     """
     Fixed VGG-19 feature encoder loaded with canonical normalized weights.
@@ -18,11 +21,13 @@ class VGGEncoder(nn.Module):
 
     def __init__(
         self,
-        weights_path: str = "c:/art/checkpoints/vgg_normalised.pth",
+        weights_path: str = None,
         device: torch.device = torch.device("cpu")
     ):
         super().__init__()
         self.device = device
+        if weights_path is None:
+            weights_path = VGG_WEIGHTS_PATH
 
         vgg = nn.Sequential(
             nn.Conv2d(3, 3, (1, 1)),
