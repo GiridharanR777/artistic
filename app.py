@@ -44,22 +44,34 @@ from evaluation.metrics import evaluate_transfer_pair
 
 
 @st.cache_resource(show_spinner=False)
-def load_cached_model():
-    """Ensures checkpoints exist and loads model once into RAM."""
+def load_cached_model(cache_key: str = "v6_canonical_weights_verified"):
+    """Ensures checkpoints exist, forces fresh weights, and performs self-test verification."""
     ensure_weights_exist()
-    return get_model()
+    model = get_model(force_reload=True)
+    with torch.no_grad():
+        test_in = torch.full((1, 3, 64, 64), 0.5)
+        test_out = model(test_in, test_in, 0.5)
+        if test_out.mean().item() < 0.05:
+            from models.pretrained import load_pretrained_decoder
+            from paths import DECODER_WEIGHTS_PATH
+            model.decoder = load_pretrained_decoder(DECODER_WEIGHTS_PATH)
+    return model
 
 
 def main():
     # Load model with friendly spinner
     with st.spinner("🧠 Initializing neural style transfer model (one-time setup)..."):
-        model = load_cached_model()
+        model = load_cached_model("v6_canonical_weights_verified")
 
     st.title("🎨 Artistic Image Style Transfer")
     st.caption("Fast neural style transfer with controllable strength and strict content preservation.")
 
     # Sidebar Controls
     st.sidebar.header("⚙️ Configuration")
+
+    if st.sidebar.button("🔄 Clear Cache & Reload Weights"):
+        st.cache_resource.clear()
+        st.rerun()
 
     strength = st.sidebar.slider(
         "Style Strength (α)",
