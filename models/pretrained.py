@@ -31,8 +31,9 @@ def load_pretrained_decoder(
     if checkpoint_path is None:
         checkpoint_path = DECODER_WEIGHTS_PATH
 
-    if not os.path.exists(checkpoint_path) and os.path.exists(DECODER_WEIGHTS_PATH):
-        checkpoint_path = DECODER_WEIGHTS_PATH
+    if not os.path.exists(checkpoint_path) or os.path.getsize(checkpoint_path) < 10_000_000:
+        from paths import ensure_weights_exist
+        ensure_weights_exist()
 
     if os.path.exists(checkpoint_path):
         print(f"[Model] Loading decoder checkpoint from: {checkpoint_path}")
@@ -48,7 +49,6 @@ def load_pretrained_decoder(
                 # Canonical AdaIN decoder weights format ('1.weight', '5.weight', ...)
                 decoder.decoder.load_state_dict(state)
     else:
-        print("[Model] Initializing decoder with Kaiming normal weights.")
-        initialize_weights(decoder)
+        raise RuntimeError(f"Required decoder weights not found at {checkpoint_path}")
 
     return decoder

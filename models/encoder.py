@@ -63,11 +63,15 @@ class VGGEncoder(nn.Module):
             nn.ReLU()   # relu4-1 (idx 30)
         )
 
+        if not os.path.exists(weights_path) or os.path.getsize(weights_path) < 70_000_000:
+            from paths import ensure_weights_exist
+            ensure_weights_exist()
+
         if os.path.exists(weights_path):
             state = torch.load(weights_path, map_location=device, weights_only=False)
             vgg.load_state_dict(state, strict=False)
         else:
-            print(f"[Warning] Normalised VGG weights not found at {weights_path}")
+            raise RuntimeError(f"Required normalized VGG weights not found at {weights_path}")
 
         enc_layers = list(vgg.children())
         self.enc_1 = nn.Sequential(*enc_layers[:4]).to(device)   # input -> relu1_1
