@@ -1,0 +1,23 @@
+# Datasets (large files)
+val2017/
+wikiart_cache/
+
+# Large Model Weights (Automatically downloaded on demand via paths.py)
+checkpoints/*.pth
+checkpoints/*.tar
+
+# Generated Outputs and Logs
+outputs/
+*.log
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

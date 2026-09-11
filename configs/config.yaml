@@ -1,0 +1,35 @@
+# Artistic Style Transfer Configuration
+dataset:
+  content_dir: "c:/art/val2017"
+  content_subset_size: 500       # Configurable subset size (e.g., 500 for test, 5000 for full val)
+  wikiart_handle: "steubk/wikiart"
+  wikiart_cache_dir: "c:/art/wikiart_cache"
+  selected_styles:
+    - "Impressionism"
+    - "Post_Impressionism"
+    - "Expressionism"
+    - "Cubism"
+    - "Ukiyo_e"
+  style_samples_per_category: 50 # Images per category downloaded on-demand for training
+  image_size: 256                # Manageable resolution (256x256 for fast CPU training, up to 512)
+
+training:
+  batch_size: 2                  # CPU memory-friendly batch size
+  num_workers: 0                 # 0 to avoid multi-process overhead on Windows 2-core CPU
+  learning_rate: 0.0001
+  lr_decay: 0.00005
+  epochs: 2
+  save_interval_steps: 100
+  checkpoint_dir: "c:/art/checkpoints"
+  resume_checkpoint: ""          # Path to .pth if resuming
+
+losses:
+  content_weight: 1.0            # VGG feature MSE (relu4_1)
+  style_weight: 10.0             # Multi-layer VGG mean & std MSE
+  structural_weight: 1.0         # SSIM loss for edge and facial structure preservation
+  tv_weight: 0.00001             # Total Variation loss for smooth gradients and artifact prevention
+
+inference:
+  default_strength: 0.75         # Default alpha in [0.0, 1.0]
+  color_preserve: false          # If True, transfers style texture while retaining content colors
+  output_dir: "c:/art/outputs"
