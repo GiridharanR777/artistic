@@ -131,21 +131,40 @@ def main():
         style_img = None
 
         if style_source == "Artistic Library":
+            # Search in wikiart_cache first (if local), fallback to samples/styles (cloud & local)
+            source_dir = WIKIART_CACHE_DIR if (os.path.exists(WIKIART_CACHE_DIR) and os.listdir(WIKIART_CACHE_DIR)) else os.path.join(SAMPLES_DIR, "styles")
             categories = []
-            if os.path.exists(WIKIART_CACHE_DIR):
-                categories = sorted([d for d in os.listdir(WIKIART_CACHE_DIR) if os.path.isdir(os.path.join(WIKIART_CACHE_DIR, d))])
+            if os.path.exists(source_dir):
+                categories = sorted([d for d in os.listdir(source_dir) if os.path.isdir(os.path.join(source_dir, d))])
 
             if categories:
-                chosen_cat = st.selectbox("Art Movement", categories)
-                cat_files = sorted(glob.glob(os.path.join(WIKIART_CACHE_DIR, chosen_cat, "*.*")))
+                def format_genre(g):
+                    names = {
+                        "Cubism": "📐 Cubism",
+                        "Expressionism": "🎭 Expressionism",
+                        "Impressionism": "🎨 Impressionism",
+                        "Post_Impressionism": "🌌 Post-Impressionism",
+                        "Ukiyo_e": "🌊 Ukiyo-e (Woodblock)"
+                    }
+                    return names.get(g, g.replace("_", " ").title())
+
+                chosen_cat = st.selectbox("Art Movement / Genre", categories, format_func=format_genre)
+                cat_files = sorted(glob.glob(os.path.join(source_dir, chosen_cat, "*.*")))
                 if cat_files:
-                    chosen_style_file = st.selectbox("Artwork", cat_files, format_func=os.path.basename)
+                    def format_art(f):
+                        base = os.path.splitext(os.path.basename(f))[0]
+                        if "_" in base:
+                            artist, title = base.split("_", 1)
+                            return f"{artist.replace('-', ' ').title()} — {title.replace('-', ' ').title()}"
+                        return base.replace('-', ' ').title()
+
+                    chosen_style_file = st.selectbox("Artwork", cat_files, format_func=format_art)
                     style_img = Image.open(chosen_style_file).convert("RGB")
-                    st.image(style_img, caption=f"Style: {chosen_cat}", use_container_width=True)
+                    st.image(style_img, caption=f"Style: {format_genre(chosen_cat)}", use_container_width=True)
             else:
-                sample_styles = sorted(glob.glob(os.path.join(SAMPLES_DIR, "styles", "*.*")))
-                if sample_styles:
-                    chosen_style_file = st.selectbox("Artwork", sample_styles, format_func=os.path.basename)
+                fallback_files = sorted(glob.glob(os.path.join(SAMPLES_DIR, "styles", "**", "*.*"), recursive=True))
+                if fallback_files:
+                    chosen_style_file = st.selectbox("Artwork", fallback_files, format_func=os.path.basename)
                     style_img = Image.open(chosen_style_file).convert("RGB")
                     st.image(style_img, caption="Artwork Sample", use_container_width=True)
                 else:
